@@ -3,14 +3,14 @@ const app = express();
 const users = require("../users.json");
 const slugify = require("slugify");
 const { body, validationResult } = require("express-validator");
+const { checkIfExist } = require("../middlewares/users");
 
 app.get("/", (req, res) => {
     res.json(users);
 });
 
-app.get("/:slug", (req, res) => {
-    const user = users.find((user) => user.slug === req.params.slug);
-    res.json(user);
+app.get("/:slug", checkIfExist, (req, res) => {
+    res.json(req.user);
 });
 
 app.post(
@@ -26,7 +26,7 @@ app.post(
     body("city")
         .exists()
         .isIn(["Paris", "Tokyo", "Los Angeles"])
-        .withMessage("Invalide city"),
+        .withMessage("Invalid city"),
     body("email").exists().isEmail().withMessage("Invalid email"),
     (req, res) => {
         const { errors } = validationResult(req);
@@ -48,7 +48,7 @@ app.post(
                 profile_picture: req.body.profile_picture,
             };
             users.push(user);
-            res.json(user);
+            res.status(201).json(user);
         }
     }
 );
